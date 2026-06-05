@@ -18,7 +18,7 @@ exposure, tone curve, and more!
 
 ## Requirements
 
-- **Camera**: Fujifilm X-series camera with USB RAW conversion support (X-T30, X-T3, X-T4, X-H1, X-Pro3, etc.)
+- **Camera**: Fujifilm X-series camera with USB RAW conversion support (X-T20, X-T30, X-T3, X-T4, X-H1, X-Pro3, etc.)
 - **Python**: 3.7 or newer
 - **PyUSB**: USB library for Python
 - **Operating System**: Linux (tested), macOS (should work), Windows (untested)
