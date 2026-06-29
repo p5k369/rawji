@@ -30,6 +30,8 @@ exposure, tone curve, and more!
 3. Select: **USB RAW CONV./BACKUP RESTORE**
 4. Connect camera to computer via USB
 
+> **Note:** the camera only converts RAF files that were **shot by that same camera body**. Feeding a RAF from a different body (or model) is rejected with PTP error `0x2002`.
+
 ## Usage
 
 Basic Conversion, uses the camera's default settings from when the photo was
