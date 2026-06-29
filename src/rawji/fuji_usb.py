@@ -495,12 +495,16 @@ class FujiCamera:
 
         print("[+] Profile sent successfully")
 
-    def trigger_conversion(self):
-        """Trigger RAW conversion (set property 0xD183 to 0)"""
+    def trigger_conversion(self, full_resolution: bool = True):
+        """Trigger the RAW conversion.
+
+        full_resolution=True renders at the profile's ImageSize/ImageQuality,
+        False renders a small preview.
+        """
         print("[*] Triggering RAW conversion...")
 
-        # Value is just uint16 = 0
-        data = struct.pack('<H', 0)
+        # D183: 1 = full render, 0 = preview
+        data = struct.pack('<H', 1 if full_resolution else 0)
 
         code, params = self.send_data_command(
             PTPOperation.SetDevicePropValue,
