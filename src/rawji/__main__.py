@@ -248,6 +248,15 @@ Requirements:
             changes['WhiteBalance'] = int(wb)
             print(f"White Balance: {args.white_balance}")
 
+        # WB shift
+        if args.wb_shift_r is not None:
+            changes['WBShiftR'] = args.wb_shift_r
+            print(f"WB Shift R: {args.wb_shift_r:+d}")
+
+        if args.wb_shift_b is not None:
+            changes['WBShiftB'] = args.wb_shift_b
+            print(f"WB Shift B: {args.wb_shift_b:+d}")
+
         # Dynamic range
         if args.dynamic_range:
             dr = DynamicRange.from_percent(args.dynamic_range)
