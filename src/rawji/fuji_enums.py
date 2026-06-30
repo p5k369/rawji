@@ -213,6 +213,15 @@ class GrainEffectSize(IntEnum):
     Small = 0x0
     Large = 0x1
 
+    @classmethod
+    def names(cls):
+        """Return list of film grain size names for argparse choices"""
+        return [name.lower() for name in cls.__members__.keys()]
+
+    @classmethod
+    def from_name(cls, name: str):
+        """Convert CLI name to enum value"""
+        return cls[name.capitalize()]
 
 class ChromeEffect(IntEnum):
     """Color chrome effect strength"""
@@ -237,6 +246,15 @@ class ColorChromeBlue(IntEnum):
     Weak = 0x1
     Strong = 0x2
 
+    @classmethod
+    def names(cls):
+        """Return list color chrome blue effect names for argparse choices"""
+        return [name.lower() for name in cls.__members__.keys()]
+
+    @classmethod
+    def from_name(cls, name: str):
+        """Convert CLI name to enum value"""
+        return cls[name.capitalize()]
 
 class ColorSpace(IntEnum):
     """Output colour space (sets the JPEG's EXIF ColorSpace tag)."""
@@ -440,7 +458,7 @@ FUJIFILM_CAMERA_PIDS = [
     0x02D1,  # X100F
     0x02DD,  # X-T3
     0x02E3,  # X-T30
-    0x02E5,  # X-T3 (variant)
+    0x02E5,  # X100V
     0x02E7,  # X-T4
     # Add more as discovered
 ]
