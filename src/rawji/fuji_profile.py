@@ -41,6 +41,58 @@ def decode_tone_value(encoded: int) -> int:
         encoded = encoded - 0x100000000
     return encoded // 10
 
+NOISE_REDUCTION_CODES = {
+    4: 0x5000,
+    3: 0x6000,
+    2: 0x0,
+    1: 0x1000,
+    0: 0x2000,
+    -1: 0x3000,
+    -2: 0x4000,
+    -3: 0x7000,
+    -4: 0x8000,
+}
+_NOISE_REDUCTION_LEVELS = {
+    code: level for level, code in NOISE_REDUCTION_CODES.items()
+}
+
+def encode_noise_reduction(level: int) -> int:
+    """Encode a noise-reduction level (-4 to +4) to its d185 code"""
+    try:
+        return NOISE_REDUCTION_CODES[level]
+    except KeyError:
+        raise ValueError(
+            f"NoiseReduction out of range: {level} (must be -4 to +4)"
+        )
+
+def decode_noise_reduction(code: int) -> int:
+    """Decode a d185 noise-reduction code to a level (0 if unrecognised)"""
+    return _NOISE_REDUCTION_LEVELS.get(code, 0)
+
+def read_iopcode(profile: bytes) -> Optional[int]:
+    """Read the IOPCode (processor id) from a profile header, or None."""
+    if len(profile) <= 3:
+        return None
+    char_count = profile[2]
+    chars = []
+    offset = 3
+    for _ in range(max(0, char_count)):
+        if offset + 2 > len(profile):
+            return None
+        code = struct.unpack_from('<H', profile, offset)[0]
+        offset += 2
+        if code == 0:
+            break
+        chars.append(chr(code))
+    try:
+        return int(''.join(chars), 16)
+    except ValueError:
+        return None
+
+def is_xprocessor5(iopcode: int) -> bool:
+    """Whether an IOPCode identifies an XProcessor5 body."""
+    return (iopcode & 0x00FFFF00) == 0x00179500
+
 # ==============================================================================
 # Profile Parameter Indices (Standard Format)
 # ==============================================================================
@@ -65,7 +117,7 @@ PARAM_INDEX = {
     'ShadowTone': 16,         # ← Works with *10 encoding! (X-T30: -2 to +4)
     'Color': 17,              # ← Works with *10 encoding!
     'Sharpness': 18,          # ← Works with *10 encoding!
-    'NoiseReduction': 19,     # ← Should work with *10 encoding
+    'NoiseReduction': 19,     # ← NOT *10 (see encode_noise_reduction)
     'Clarity': 20,
     'ColorSpace': 21,
     'HDR': 22,
@@ -81,7 +133,7 @@ PARAM_INDEX = {
 INDEX_TO_PARAM = {v: k for k, v in PARAM_INDEX.items()}
 
 # Parameters that use *10 encoding
-TONE_PARAMS = {'HighlightTone', 'ShadowTone', 'Color', 'Sharpness', 'NoiseReduction', 'Clarity'}
+TONE_PARAMS = {'HighlightTone', 'ShadowTone', 'Color', 'Sharpness', 'Clarity'}
 
 # ==============================================================================
 # Profile Creation
@@ -169,6 +221,12 @@ def create_profile_from_camera(
             value = params[param_name]
             params[param_name] = encode_tone_value(value)
 
+    # NoiseReduction uses its own code table (not *10)
+    if 'NoiseReduction' in params:
+        params['NoiseReduction'] = encode_noise_reduction(
+            params['NoiseReduction']
+        )
+
     # Write parameters at offset 0x201
     for i in range(NUM_PARAMS):
         param_name = INDEX_TO_PARAM[i]
@@ -209,7 +267,9 @@ def create_profile_simple(
     """
     changes = {
         'FilmSimulation': film_sim,
-        'ExposureBias': int(exposure * 1000),  # Convert EV to millistops
+        # Round, not truncate: 2/3 EV is 0.6667 -> 667, not 666 (the camera
+        # rejects off-by-one codes for some 1/3-stop steps).
+        'ExposureBias': round(exposure * 1000),
         'HighlightTone': highlights,
         'ShadowTone': shadows,
         'Color': color,
@@ -247,6 +307,8 @@ def parse_profile(data: bytes) -> Dict[str, int]:
         # Decode tone parameters
         if param_name in TONE_PARAMS:
             value = decode_tone_value(value)
+        elif param_name == 'NoiseReduction':
+            value = decode_noise_reduction(value)
 
         params[param_name] = value
 

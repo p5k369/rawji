@@ -238,6 +238,12 @@ class ColorChromeBlue(IntEnum):
     Strong = 0x2
 
 
+class ColorSpace(IntEnum):
+    """Output colour space (sets the JPEG's EXIF ColorSpace tag)."""
+    sRGB = 0x1
+    AdobeRGB = 0x2
+
+
 # ==============================================================================
 # Exposure Bias Constants
 # ==============================================================================
@@ -258,7 +264,9 @@ def ev_to_int(ev: float) -> int:
     """Convert EV float to int32 for profile (-5.0 to +5.0)"""
     if ev < -5.0 or ev > 5.0:
         raise ValueError(f"Exposure bias out of range: {ev} EV (must be -5.0 to +5.0)")
-    return int(ev * 1000)
+    # Round, not truncate: 2/3 EV is 0.6667 -> 667, not 666. The camera
+    # rejects off-by-one codes for some 1/3-stop steps.
+    return round(ev * 1000)
 
 
 def int_to_ev(value: int) -> float:
@@ -323,6 +331,20 @@ def validate_color_temp(value: int) -> int:
     if value < 2500 or value > 10000:
         raise ValueError(f"Color temperature out of range: {value}K (must be 2500K to 10000K)")
     return value
+
+
+# The camera honors ONLY these exact Kelvin presets for Temperature WB; any
+# other value falls back to the coolest.
+WB_KELVIN_PRESETS = (
+    2500, 2550, 2650, 2700, 2800, 2850, 2950, 3000, 3100, 3200, 3300,
+    3400, 3600, 3700, 3800, 4000, 4200, 4300, 4500, 4800, 5000, 5300,
+    5600, 5900, 6300, 6700, 7100, 7700, 8300, 9100, 10000,
+)
+
+
+def nearest_color_temp(value: int) -> int:
+    """Snap a Kelvin value to the nearest preset the camera honors."""
+    return min(WB_KELVIN_PRESETS, key=lambda preset: abs(preset - value))
 
 
 # ==============================================================================
@@ -415,8 +437,10 @@ FUJIFILM_USB_VENDOR_ID = 0x04CB  # Fuji Photo Film Co., Ltd
 
 # Known Fujifilm PTP camera PIDs
 FUJIFILM_CAMERA_PIDS = [
+    0x02D1,  # X100F
+    0x02DD,  # X-T3
     0x02E3,  # X-T30
-    0x02E5,  # X-T3
+    0x02E5,  # X-T3 (variant)
     0x02E7,  # X-T4
     # Add more as discovered
 ]
