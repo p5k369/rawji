@@ -271,7 +271,7 @@ Requirements:
 
         if args.color_chrome:
             chrome = ChromeEffect.from_name(args.color_chrome)
-            changes['ChromeEffect'] = int(chrome)
+            changes['ColorChromeEffect'] = int(chrome)
             print(f"Color Chrome Effect: {args.color_chrome}")
 
         print("=" * 70)

@@ -107,7 +107,7 @@ PARAM_INDEX = {
     'WideDRange': 6,
     'FilmSimulation': 7,      # ← Film sim works!
     'GrainEffect': 8,
-    'SmoothSkinEffect': 9,
+    'ColorChromeEffect': 9,
     'WBShootCond': 10,
     'WhiteBalance': 11,
     'WBShiftR': 12,
@@ -189,7 +189,7 @@ def create_profile_from_camera(
         'WideDRange': 0,
         'FilmSimulation': 0x1,   # Provia (default)
         'GrainEffect': 0,
-        'SmoothSkinEffect': 0,
+        'ColorChromeEffect': 0,
         'WBShootCond': 0,
         'WhiteBalance': 0,       # AsShot
         'WBShiftR': 0,
