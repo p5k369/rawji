@@ -79,7 +79,10 @@ class FilmSimulation(IntEnum):
     AcrosR = 0xE  # Acros + Red filter
     AcrosG = 0xF  # Acros + Green filter
     Eterna = 0x10  # Cinema
-    EternaBleach = 0x11  # Eterna Bleach Bypass
+    ClassicNeg = 0x11  # Classic Negative
+    EternaBleach = 0x12  # Eterna Bleach Bypass
+    NostalgicNeg = 0x13  # Nostalgic Neg.
+    RealaAce = 0x14  # Reala Ace
 
     @classmethod
     def names(cls):
@@ -223,6 +226,20 @@ class GrainEffectSize(IntEnum):
         """Convert CLI name to enum value"""
         return cls[name.capitalize()]
 
+
+def grain_effect_code(effect: 'GrainEffect', size: 'GrainEffectSize') -> int:
+    """Combine grain effect and size into the single profile value.
+
+    Grain effect and size share ONE profile slot (index 8). Verified on
+    an X-E5: Off=1, Weak/Small=2, Strong/Small=3, Weak/Large=4,
+    Strong/Large=5 (values 6+ are ignored). There is no separate size
+    slot, which is why a GrainEffectSize change key has no effect.
+    """
+    if effect == GrainEffect.Off:
+        return int(GrainEffect.Off)
+    return int(effect) + (2 if size == GrainEffectSize.Large else 0)
+
+
 class ChromeEffect(IntEnum):
     """Color chrome effect strength"""
     Off = 0x1
@@ -241,10 +258,14 @@ class ChromeEffect(IntEnum):
 
 
 class ColorChromeBlue(IntEnum):
-    """Color chrome blue effect"""
-    Off = 0x0
-    Weak = 0x1
-    Strong = 0x2
+    """Color Chrome FX Blue strength.
+
+    Verified via an X Raw Studio USB capture. The profile slot uses the same
+    Off=1/Weak=2/Strong=3 values as ChromeEffect.
+    """
+    Off = 0x1
+    Weak = 0x2
+    Strong = 0x3
 
     @classmethod
     def names(cls):
@@ -460,6 +481,7 @@ FUJIFILM_CAMERA_PIDS = [
     0x02E3,  # X-T30
     0x02E5,  # X100V
     0x02E7,  # X-T4
+    0x0313,  # X-E5
     # Add more as discovered
 ]
 

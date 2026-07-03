@@ -107,7 +107,7 @@ PARAM_INDEX = {
     'WideDRange': 6,
     'FilmSimulation': 7,      # ← Film sim works!
     'GrainEffect': 8,
-    'SmoothSkinEffect': 9,
+    'ColorChromeEffect': 9,
     'WBShootCond': 10,
     'WhiteBalance': 11,
     'WBShiftR': 12,
@@ -118,13 +118,13 @@ PARAM_INDEX = {
     'Color': 17,              # ← Works with *10 encoding!
     'Sharpness': 18,          # ← Works with *10 encoding!
     'NoiseReduction': 19,     # ← NOT *10 (see encode_noise_reduction)
-    'Clarity': 20,
+    'Reserved20': 20,
     'ColorSpace': 21,
     'HDR': 22,
-    'DigitalTeleConv': 23,
-    'PortraitEnhancer': 24,
+    'SmoothSkinEffect': 23,
+    'ColorChromeBlue': 24,
     'Reserved25': 25,
-    'Reserved26': 26,
+    'Clarity': 26,            # *10 encoding
     'Reserved27': 27,
     'Reserved28': 28,
 }
@@ -189,7 +189,7 @@ def create_profile_from_camera(
         'WideDRange': 0,
         'FilmSimulation': 0x1,   # Provia (default)
         'GrainEffect': 0,
-        'SmoothSkinEffect': 0,
+        'ColorChromeEffect': 0,
         'WBShootCond': 0,
         'WhiteBalance': 0,       # AsShot
         'WBShiftR': 0,
@@ -200,13 +200,13 @@ def create_profile_from_camera(
         'Color': 0,
         'Sharpness': 0,
         'NoiseReduction': 0,
-        'Clarity': 0,
+        'Reserved20': 0,
         'ColorSpace': 0,
         'HDR': 0,
-        'DigitalTeleConv': 0,
-        'PortraitEnhancer': 0,
+        'SmoothSkinEffect': 0,
+        'ColorChromeBlue': 0,
         'Reserved25': 0,
-        'Reserved26': 0,
+        'Clarity': 0,
         'Reserved27': 0,
         'Reserved28': 0,
     }
@@ -340,8 +340,8 @@ def validate_params(
 ) -> None:
     """Validate parameter ranges"""
 
-    if film_sim is not None and (film_sim < 0x1 or film_sim > 0x11):
-        raise ValueError(f"FilmSimulation out of range: 0x{film_sim:02X} (must be 0x01-0x11)")
+    if film_sim is not None and (film_sim < 0x1 or film_sim > 0x14):
+        raise ValueError(f"FilmSimulation out of range: 0x{film_sim:02X} (must be 0x01-0x14)")
 
     if exposure is not None and (exposure < -5.0 or exposure > 5.0):
         raise ValueError(f"Exposure out of range: {exposure} (must be -5.0 to +5.0 EV)")

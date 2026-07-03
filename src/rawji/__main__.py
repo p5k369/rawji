@@ -18,7 +18,11 @@ from pathlib import Path
 
 from .fuji_usb import FujiCamera
 from .fuji_profile import create_profile_from_camera, validate_params
-from .fuji_enums import FilmSimulation, WhiteBalance, DynamicRange, GrainEffect, GrainEffectSize, ChromeEffect, ColorChromeBlue
+from .fuji_enums import (
+    FilmSimulation, WhiteBalance, DynamicRange,
+    GrainEffect, GrainEffectSize, ChromeEffect, ColorChromeBlue,
+    grain_effect_code,
+)
 
 
 def main():
@@ -48,7 +52,7 @@ Film Simulations:
   provia, velvia, astia, pronegh, pronegstd, monochrome,
   monochrome-ye, monochrome-r, monochrome-g, sepia,
   classic-chrome, acros, acros-ye, acros-r, acros-g,
-  eterna, eterna-bleach
+  eterna, classic-neg, eterna-bleach, nostalgic-neg, reala-ace
 
 Requirements:
   - Camera in "USB RAW CONVERSION" mode (SET UP menu)
@@ -174,7 +178,13 @@ Requirements:
         '--color-chrome-blue',
         type=str,
         choices=ColorChromeBlue.names(),
-        help='Color chrome effect (off, weak, strong)'
+        help='Color chrome FX blue (off, weak, strong)'
+    )
+    parser.add_argument(
+        '--smooth-skin',
+        type=str,
+        choices=ChromeEffect.names(),
+        help='Smooth skin effect (off, weak, strong)'
     )
 
     # Debug options
@@ -254,6 +264,10 @@ Requirements:
             changes['NoiseReduction'] = args.nr
             print(f"Noise Reduction: {args.nr:+d}")
 
+        if args.clarity is not None:
+            changes['Clarity'] = args.clarity
+            print(f"Clarity: {args.clarity:+d}")
+
         # White balance
         if args.white_balance:
             wb = WhiteBalance.from_name(args.white_balance)
@@ -278,23 +292,25 @@ Requirements:
         # Film effects
         if args.grain:
             grain = GrainEffect.from_name(args.grain)
-            changes['GrainEffect'] = int(grain)
-            print(f"Grain Effect: {args.grain}")
-
-        if args.grain:
-            grain_size = GrainEffectSize.from_name(args.grain_size)
-            changes['GrainEffectSize'] = int(grain_size)
-            print(f"Grain Size Effect: {args.grain_size}")
+            size = GrainEffectSize.from_name(args.grain_size or 'small')
+            # Effect and size share one profile slot, see grain_effect_code.
+            changes['GrainEffect'] = grain_effect_code(grain, size)
+            print(f"Grain Effect: {args.grain} ({args.grain_size or 'small'})")
 
         if args.color_chrome:
             chrome = ChromeEffect.from_name(args.color_chrome)
-            changes['ChromeEffect'] = int(chrome)
+            changes['ColorChromeEffect'] = int(chrome)
             print(f"Color Chrome Effect: {args.color_chrome}")
 
         if args.color_chrome_blue:
             chrome_blue = ColorChromeBlue.from_name(args.color_chrome_blue)
             changes['ColorChromeBlue'] = int(chrome_blue)
-            print(f"Color Chrome Blue Effect: {args.color_chrome_blue}")
+            print(f"Color Chrome FX Blue: {args.color_chrome_blue}")
+
+        if args.smooth_skin:
+            skin = ChromeEffect.from_name(args.smooth_skin)
+            changes['SmoothSkinEffect'] = int(skin)
+            print(f"Smooth Skin Effect: {args.smooth_skin}")
 
         print("=" * 70)
 
