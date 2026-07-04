@@ -64,10 +64,16 @@ rawji photo.RAF converted.jpg \
 - `velvia` - Vivid (saturated colors, high contrast)
 - `astia` - Soft (gentle colors)
 - `classic-chrome` - Muted, vintage look
+- `classic-neg` - Classic Negative (film-print look)
+- `nostalgic-neg` - Nostalgic Negative (warm, amber look)
+- `reala-ace` - Reala Ace (faithful color, hard tonality)
 - `pronegh` / `pronegstd` - PRO Neg (for portraits)
 - `acros` / `acros-ye` / `acros-r` / `acros-g` - B&W variations
 - `monochrome` / `sepia` - Standard B&W and sepia
 - `eterna` / `eterna-bleach` - Cinema-like colors
+
+A film simulation must exist on the camera doing the conversion. The
+engine renders unknown codes as Provia.
 
 ### Parameter Reference
 
@@ -80,8 +86,12 @@ rawji photo.RAF converted.jpg \
 | `--sharpness`     | -4 to +4            | Sharpness (-4=soft, +4=hard)  |
 | `--color`         | -4 to +4            | Color saturation/intensity    |
 | `--nr`            | -4 to +4            | Noise reduction               |
+| `--clarity`       | -5 to +5            | Clarity (newer bodies only)   |
 | `--grain`         | off/weak/strong     | Film grain effect             |
+| `--grain-size`    | small/large         | Grain size                    |
 | `--color-chrome`  | off/weak/strong     | Color chrome effect           |
+| `--color-chrome-blue` | off/weak/strong | Color chrome FX blue          |
+| `--smooth-skin`   | off/weak/strong     | Smooth skin effect            |
 | `--dynamic-range` | 100/200/400         | Dynamic range setting         |
 | `--white-balance` | auto/daylight/shade | White balance preset          |
 
@@ -132,6 +142,9 @@ The entire process takes ~2-5 seconds per image.
 ## Cameras tested
 
 - Fujifilm X-T30
+- Fujifilm X100F
+- Fujifilm X-T3
+- Fujifilm X-E5
 
 ## Credits & Acknowledgments
 
