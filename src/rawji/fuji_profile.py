@@ -351,8 +351,8 @@ def validate_params(
     if exposure is not None and (exposure < -2.0 or exposure > 3.0):
         raise ValueError(f"Exposure out of range: {exposure} (must be -2.0 to +3.0 EV)")
 
-    if highlights is not None and (highlights < -4 or highlights > 4):
-        raise ValueError(f"Highlights out of range: {highlights} (must be -4 to +4)")
+    if highlights is not None and (highlights < -2 or highlights > 4):
+        raise ValueError(f"Highlights out of range: {highlights} (must be -2 to +4)")
 
     # X-T30 shadow tone is limited to -2 to +4
     if shadows is not None and (shadows < -2 or shadows > 4):

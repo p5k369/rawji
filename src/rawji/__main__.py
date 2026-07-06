@@ -86,7 +86,7 @@ Requirements:
         '--highlights',
         type=int,
         metavar='N',
-        help='Highlight tone (-4 to +4)'
+        help='Highlight tone (-2 to +4)'
     )
     parser.add_argument(
         '--shadows',
