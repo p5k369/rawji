@@ -12,7 +12,7 @@ exposure, tone curve, and more!
 
 - **All Film Simulations** - Provia, Velvia, Acros, Classic Chrome, Eterna, and more
 - **Complete Tone Control** - Sharpness, Highlights, Shadows, Color/Saturation
-- **Exposure Adjustment** - ±5.0 EV in 1/3 stop increments
+- **Exposure Adjustment** - -2.0 to +3.0 EV in 1/3 stops (honored range)
 - **Dynamic Range** - DR100, DR200, DR400
 - **White Balance** - Full control including temperature and RGB shift
 
@@ -75,25 +75,46 @@ rawji photo.RAF converted.jpg \
 A film simulation must exist on the camera doing the conversion. The
 engine renders unknown codes as Provia.
 
+### White Balance Options
+
+- `asshot` - Keep the RAF's own white balance (default when unset)
+- `auto` - Automatic white balance
+- `daylight` - Daylight
+- `shade` - Shade
+- `incandescent` - Incandescent / tungsten
+- `fluorescent1` / `fluorescent2` / `fluorescent3` - Fluorescent
+- `underwater` - Underwater
+- `temperature` - Manual color temperature, set the value with `--wb-temp`
+- `custom1` / `custom2` / `custom3` - Custom presets measured on the camera
+
+Any preset can be fine-tuned with `--wb-shift-r` and `--wb-shift-b`. The
+manual `temperature` mode honors only the camera's Kelvin presets on
+older bodies, but any value from 2500 to 10000 K on XProcessor5 bodies.
+
 ### Parameter Reference
 
-| Parameter         | Range               | Description                   |
-|-------------------|---------------------|-------------------------------|
-| `--film-sim`      | See above           | Film simulation mode          |
-| `--exposure`      | -5.0 to +5.0        | Exposure bias in EV           |
-| `--highlights`    | -4 to +4            | Highlight tone adjustment     |
-| `--shadows`       | -2 to +4            | Shadow tone (X-T30: -2 to +4) |
-| `--sharpness`     | -4 to +4            | Sharpness (-4=soft, +4=hard)  |
-| `--color`         | -4 to +4            | Color saturation/intensity    |
-| `--nr`            | -4 to +4            | Noise reduction               |
-| `--clarity`       | -5 to +5            | Clarity (newer bodies only)   |
-| `--grain`         | off/weak/strong     | Film grain effect             |
-| `--grain-size`    | small/large         | Grain size                    |
-| `--color-chrome`  | off/weak/strong     | Color chrome effect           |
+| Parameter         | Range             | Description                   |
+|-------------------|-------------------|-------------------------------|
+| `--film-sim`      | See above         | Film simulation mode          |
+| `--exposure`      | -2.0 to +3.0      | Exposure bias in EV (1/3 stops) |
+| `--highlights`    | -2 to +4          | Highlight tone adjustment     |
+| `--shadows`       | -2 to +4          | Shadow tone (X-T30: -2 to +4) |
+| `--sharpness`     | -4 to +4          | Sharpness (-4=soft, +4=hard)  |
+| `--color`         | -4 to +4          | Color saturation/intensity    |
+| `--nr`            | -4 to +4          | Noise reduction               |
+| `--clarity`       | -5 to +5          | Clarity (newer bodies only)   |
+| `--grain`         | off/weak/strong   | Film grain effect             |
+| `--grain-size`    | small/large       | Grain size                    |
+| `--color-chrome`  | off/weak/strong   | Color chrome effect           |
 | `--color-chrome-blue` | off/weak/strong | Color chrome FX blue          |
-| `--smooth-skin`   | off/weak/strong     | Smooth skin effect            |
-| `--dynamic-range` | 100/200/400         | Dynamic range setting         |
-| `--white-balance` | auto/daylight/shade | White balance preset          |
+| `--smooth-skin`   | off/weak/strong   | Smooth skin effect            |
+| `--dynamic-range` | 100/200/400       | Dynamic range setting         |
+| `--white-balance` | See above         | White balance mode            |
+| `--wb-shift-r`    | -9 to +9          | WB shift, red-cyan axis       |
+| `--wb-shift-b`    | -9 to +9          | WB shift, blue-yellow axis    |
+| `--wb-temp`       | 2500 to 10000 K   | Kelvin (needs `temperature`)  |
+| `--mono-wc`       | ±9 gen4 / ±18 XProc5 | Mono warm-cool (B&W sims)    |
+| `--mono-mg`       | ±18 XProc5   | Mono magenta-green (B&W sims) |
 
 ## Examples
 
