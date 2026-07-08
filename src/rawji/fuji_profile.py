@@ -120,10 +120,10 @@ PARAM_INDEX = {
     'NoiseReduction': 19,     # ← NOT *10 (see encode_noise_reduction)
     'Reserved20': 20,
     'ColorSpace': 21,
-    'HDR': 22,
+    'BlackImageTone': 22,
     'SmoothSkinEffect': 23,
     'ColorChromeBlue': 24,
-    'Reserved25': 25,
+    'MonochromaticColorRG': 25,
     'Clarity': 26,            # *10 encoding
     'Reserved27': 27,
     'Reserved28': 28,
@@ -133,7 +133,10 @@ PARAM_INDEX = {
 INDEX_TO_PARAM = {v: k for k, v in PARAM_INDEX.items()}
 
 # Parameters that use *10 encoding
-TONE_PARAMS = {'HighlightTone', 'ShadowTone', 'Color', 'Sharpness', 'Clarity'}
+TONE_PARAMS = {
+    'HighlightTone', 'ShadowTone', 'Color', 'Sharpness', 'Clarity',
+    'BlackImageTone', 'MonochromaticColorRG',
+}
 
 # ==============================================================================
 # Profile Creation
@@ -202,10 +205,10 @@ def create_profile_from_camera(
         'NoiseReduction': 0,
         'Reserved20': 0,
         'ColorSpace': 0,
-        'HDR': 0,
+        'BlackImageTone': 0,
         'SmoothSkinEffect': 0,
         'ColorChromeBlue': 0,
-        'Reserved25': 0,
+        'MonochromaticColorRG': 0,
         'Clarity': 0,
         'Reserved27': 0,
         'Reserved28': 0,
@@ -337,17 +340,19 @@ def validate_params(
     shadows: Optional[int] = None,
     color: Optional[int] = None,
     sharpness: Optional[int] = None,
+    warm_cool: Optional[int] = None,
+    magenta_green: Optional[int] = None,
 ) -> None:
     """Validate parameter ranges"""
 
     if film_sim is not None and (film_sim < 0x1 or film_sim > 0x14):
         raise ValueError(f"FilmSimulation out of range: 0x{film_sim:02X} (must be 0x01-0x14)")
 
-    if exposure is not None and (exposure < -5.0 or exposure > 5.0):
-        raise ValueError(f"Exposure out of range: {exposure} (must be -5.0 to +5.0 EV)")
+    if exposure is not None and (exposure < -2.0 or exposure > 3.0):
+        raise ValueError(f"Exposure out of range: {exposure} (must be -2.0 to +3.0 EV)")
 
-    if highlights is not None and (highlights < -4 or highlights > 4):
-        raise ValueError(f"Highlights out of range: {highlights} (must be -4 to +4)")
+    if highlights is not None and (highlights < -2 or highlights > 4):
+        raise ValueError(f"Highlights out of range: {highlights} (must be -2 to +4)")
 
     # X-T30 shadow tone is limited to -2 to +4
     if shadows is not None and (shadows < -2 or shadows > 4):
@@ -358,6 +363,14 @@ def validate_params(
 
     if sharpness is not None and (sharpness < -4 or sharpness > 4):
         raise ValueError(f"Sharpness out of range: {sharpness} (must be -4 to +4)")
+
+    if warm_cool is not None and (warm_cool < -18 or warm_cool > 18):
+        raise ValueError(f"WarmCool out of range: {warm_cool} (must be -18 to +18)")
+
+    if magenta_green is not None and (magenta_green < -18 or magenta_green > 18):
+        raise ValueError(
+            f"MagentaGreen out of range: {magenta_green} (must be -18 to +18)"
+        )
 
 
 def dump_profile(profile: bytes) -> str:

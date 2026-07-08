@@ -78,7 +78,7 @@ Requirements:
         '--exposure',
         type=float,
         metavar='EV',
-        help='Exposure bias in EV (-5.0 to +5.0)'
+        help='Exposure bias in EV (-2.0 to +3.0, 1/3 stops)'
     )
 
     # Tone curve
@@ -86,7 +86,7 @@ Requirements:
         '--highlights',
         type=int,
         metavar='N',
-        help='Highlight tone (-4 to +4)'
+        help='Highlight tone (-2 to +4)'
     )
     parser.add_argument(
         '--shadows',
@@ -119,6 +119,18 @@ Requirements:
         type=int,
         metavar='N',
         help='Clarity (-5 to +5)'
+    )
+    parser.add_argument(
+        '--mono-wc',
+        type=int,
+        metavar='N',
+        help='Mono warm-cool, B&W sims (+-9 gen4, +-18 XProcessor5)'
+    )
+    parser.add_argument(
+        '--mono-mg',
+        type=int,
+        metavar='N',
+        help='Mono magenta-green, B&W sims, XProcessor5 only (+-18)'
     )
 
     # White balance
@@ -267,6 +279,15 @@ Requirements:
         if args.clarity is not None:
             changes['Clarity'] = args.clarity
             print(f"Clarity: {args.clarity:+d}")
+
+        # Monochromatic Color
+        if args.mono_wc is not None:
+            changes['BlackImageTone'] = args.mono_wc
+            print(f"Mono WC: {args.mono_wc:+d}")
+
+        if args.mono_mg is not None:
+            changes['MonochromaticColorRG'] = args.mono_mg
+            print(f"Mono MG: {args.mono_mg:+d}")
 
         # White balance
         if args.white_balance:
