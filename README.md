@@ -16,6 +16,11 @@ exposure, tone curve, and more!
 - **Dynamic Range** - DR100, DR200, DR400
 - **White Balance** - Full control including temperature and RGB shift
 
+## GUI
+
+[grawji](https://github.com/p5k369/grawji) is a GTK4 frontend for rawji with
+live recipe previews rendered by the camera engine.
+
 ## Requirements
 
 - **Camera**: Fujifilm X-series camera with USB RAW conversion support (X-T20, X-T30, X-T3, X-T4, X-H1, X-Pro3, etc.)
@@ -74,6 +79,15 @@ rawji photo.RAF converted.jpg \
 
 A film simulation must exist on the camera doing the conversion. The
 engine renders unknown codes as Provia.
+
+### Batch Conversion
+
+Apply one recipe to many RAFs by passing several inputs and a directory
+as output:
+
+```bash
+rawji *.RAF converted/ --film-sim=velvia --grain=weak
+```
 
 ### White Balance Options
 
