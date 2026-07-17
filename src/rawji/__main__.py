@@ -7,6 +7,7 @@ Full control over film simulations, exposure, tone curve, and more.
 
 Usage:
     rawji input.RAF output.jpg [OPTIONS]
+    rawji *.RAF output-dir/ [OPTIONS]
 
 Author: Based on petabyt/fudge, libgphoto2, and protocol research
 License: GPL (due to library dependencies)
@@ -48,6 +49,9 @@ Examples:
       --white-balance=shade \\
       --dynamic-range=200
 
+  # Batch: apply one recipe to many RAFs (output is a directory)
+  %(prog)s *.RAF converted/ --film-sim=velvia
+
 Film Simulations:
   provia, velvia, astia, pronegh, pronegstd, monochrome,
   monochrome-ye, monochrome-r, monochrome-g, sepia,
@@ -62,8 +66,9 @@ Requirements:
     )
 
     # Required arguments
-    parser.add_argument('input', type=Path, help='Input RAF file')
-    parser.add_argument('output', type=Path, help='Output JPEG file')
+    parser.add_argument('input', type=Path, nargs='+', help='Input RAF file(s)')
+    parser.add_argument('output', type=Path,
+                        help='Output JPEG file, or a directory with several inputs')
 
     # Film simulation
     parser.add_argument(
@@ -208,19 +213,29 @@ Requirements:
 
     args = parser.parse_args()
 
-    # Validate input file exists
-    if not args.input.exists():
-        print(f"[-] Input file not found: {args.input}")
-        return 1
+    # Validate input files exist
+    for input_path in args.input:
+        if not input_path.exists():
+            print(f"[-] Input file not found: {input_path}")
+            return 1
 
-    if not args.input.suffix.upper() == '.RAF':
-        print(f"[!] Warning: Input file doesn't have .RAF extension: {args.input}")
+        if not input_path.suffix.upper() == '.RAF':
+            print(f"[!] Warning: Input file doesn't have .RAF extension: {input_path}")
+
+    batch = len(args.input) > 1
+    if batch or args.output.is_dir():
+        outputs = [args.output / (p.stem + '.jpg') for p in args.input]
+    else:
+        outputs = [args.output]
 
     # Print header
     print("=" * 70)
     print("Rawji - Fujifilm RAW Conversion Tool")
     print("=" * 70)
-    print(f"Input:  {args.input}")
+    if batch:
+        print(f"Input:  {len(args.input)} RAF files")
+    else:
+        print(f"Input:  {args.input[0]}")
     if not args.dump_profile:
         print(f"Output: {args.output}")
     print("=" * 70)
@@ -231,15 +246,6 @@ Requirements:
         return 1
 
     try:
-        # Send RAF file FIRST
-        # The camera needs a RAF loaded before it can return a valid profile
-        print("[*] Sending RAF file to camera...")
-        camera.send_raf(str(args.input))
-
-        # Get current profile from camera (we won't use it, just for verification)
-        original_profile = camera.get_profile()
-        print(f"[+] Camera returned {len(original_profile)}-byte profile")
-
         # Build parameter changes dictionary
         changes = {}
 
@@ -349,34 +355,60 @@ Requirements:
             print(f"[-] Parameter validation failed: {e}")
             return 1
 
-        # Create 628-byte standard format profile
-        # This works for ALL cameras including X-T30!
-        print("\n[*] Creating 628-byte standard format profile...")
-        modified_profile = create_profile_from_camera(original_profile, changes)
-        print(f"[+] Profile created: {len(modified_profile)} bytes")
+        if batch:
+            args.output.mkdir(parents=True, exist_ok=True)
 
-        # Send profile
-        print("[*] Sending profile to camera...")
-        camera.set_profile(modified_profile)
+        total_bytes = 0
+        for index, (input_path, output_path) in enumerate(zip(args.input, outputs)):
+            if batch:
+                print(f"\n--- [{index + 1}/{len(args.input)}] {input_path.name} ---")
 
-        # Trigger conversion
-        camera.trigger_conversion()
+            # Send RAF file first, the camera needs a RAF loaded before it can return a valid profile
+            print("[*] Sending RAF file to camera...")
+            camera.send_raf(str(input_path))
 
-        # Wait for result
-        jpeg_data = camera.wait_for_result(timeout=30)
+            # Get current profile from camera
+            original_profile = camera.get_profile()
+            print(f"[+] Camera returned {len(original_profile)}-byte profile")
 
-        # Verify it's actually a JPEG
-        if not jpeg_data.startswith(b'\xFF\xD8\xFF'):
-            print("[!] Warning: Downloaded data doesn't appear to be a JPEG")
+            # Create 628-byte standard format profile
+            # This works for ALL cameras including X-T30!
+            print("[*] Creating 628-byte standard format profile...")
+            modified_profile = create_profile_from_camera(original_profile, changes)
+            print(f"[+] Profile created: {len(modified_profile)} bytes")
 
-        # Save JPEG
-        print(f"[*] Saving to {args.output}...")
-        args.output.write_bytes(jpeg_data)
+            # Send profile
+            print("[*] Sending profile to camera...")
+            camera.set_profile(modified_profile)
+
+            # Trigger conversion
+            camera.trigger_conversion()
+
+            # Wait for result
+            jpeg_data = camera.wait_for_result(timeout=30)
+            if not jpeg_data:
+                # A timeout usually means the camera has wedged. Retrying
+                # only makes it worse. Power-cycle before the next attempt.
+                print(f"\n[-] Conversion timed out after {index} file(s); "
+                      "power-cycle the camera before retrying")
+                return 1
+
+            # Verify it's actually a JPEG
+            if not jpeg_data.startswith(b'\xFF\xD8\xFF'):
+                print("[!] Warning: Downloaded data doesn't appear to be a JPEG")
+
+            # Save JPEG
+            print(f"[*] Saving to {output_path}...")
+            output_path.write_bytes(jpeg_data)
+            total_bytes += len(jpeg_data)
 
         # Success!
         print("\n" + "=" * 70)
-        print(f"SUCCESS! Converted {args.input.name} -> {args.output.name}")
-        print(f"Output size: {len(jpeg_data)} bytes ({len(jpeg_data) / 1024 / 1024:.2f} MB)")
+        if batch:
+            print(f"SUCCESS! Converted {len(args.input)} RAF files -> {args.output}")
+        else:
+            print(f"SUCCESS! Converted {args.input[0].name} -> {outputs[0].name}")
+        print(f"Output size: {total_bytes} bytes ({total_bytes / 1024 / 1024:.2f} MB)")
         print("=" * 70)
 
         return 0
