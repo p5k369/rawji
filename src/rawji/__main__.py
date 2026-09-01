@@ -146,6 +146,11 @@ Requirements:
         help='White balance mode'
     )
     parser.add_argument(
+        '--thumbnail',
+        action='store_true',
+        help='Render a preview and download only its thumbnail'
+    )
+    parser.add_argument(
         '--wb-shift-r',
         type=int,
         metavar='N',
@@ -382,10 +387,11 @@ Requirements:
             camera.set_profile(modified_profile)
 
             # Trigger conversion
-            camera.trigger_conversion()
+            camera.trigger_conversion(full_resolution=not args.thumbnail)
 
             # Wait for result
-            jpeg_data = camera.wait_for_result(timeout=30)
+            jpeg_data = camera.wait_for_result(
+                timeout=30, thumbnail=args.thumbnail)
             if not jpeg_data:
                 # A timeout usually means the camera has wedged. Retrying
                 # only makes it worse. Power-cycle before the next attempt.

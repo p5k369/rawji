@@ -26,6 +26,7 @@ class PTPOperation(IntEnum):
     GetObjectHandles = 0x1007
     GetObjectInfo = 0x1008
     GetObject = 0x1009
+    GetThumb = 0x100A
     DeleteObject = 0x100B
     SendObjectInfo = 0x100C
     SendObject = 0x100D
