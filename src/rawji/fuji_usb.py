@@ -529,7 +529,7 @@ class FujiCamera:
         Returns:
             JPEG data as bytes
         """
-        print("[*] Waiting for conversion result", end='', flush=True)
+        print("[*] Waiting for conversion result", flush=True)
 
         start_time = time.time()
 
@@ -551,7 +551,7 @@ class FujiCamera:
                     # Extract first handle
                     handle = struct.unpack('<I', data[4:8])[0]
 
-                    print(f"\n[+] Conversion complete! (handle=0x{handle:08X})")
+                    print(f"[+] Conversion complete! (handle=0x{handle:08X})")
 
                     jpeg_data = b''
                     if thumbnail:
@@ -586,7 +586,6 @@ class FujiCamera:
 
                     return jpeg_data
 
-            print(".", end='', flush=True)
-            time.sleep(1)
+            time.sleep(0.05)
 
         raise TimeoutError(f"Conversion timeout after {timeout} seconds")
