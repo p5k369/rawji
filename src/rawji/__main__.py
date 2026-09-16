@@ -22,7 +22,7 @@ from .fuji_profile import create_profile_from_camera, validate_params
 from .fuji_enums import (
     FilmSimulation, WhiteBalance, DynamicRange,
     GrainEffect, GrainEffectSize, ChromeEffect, ColorChromeBlue,
-    grain_effect_code,
+    FileType, CONTAINER_SUFFIX, detect_container, grain_effect_code,
 )
 
 
@@ -151,6 +151,12 @@ Requirements:
         help='Render a preview and download only its thumbnail'
     )
     parser.add_argument(
+        '--file-type',
+        type=str,
+        choices=FileType.names(),
+        help='Output format (jpeg, tiff-8bit, tiff-16bit, heif)'
+    )
+    parser.add_argument(
         '--wb-shift-r',
         type=int,
         metavar='N',
@@ -227,9 +233,22 @@ Requirements:
         if not input_path.suffix.upper() == '.RAF':
             print(f"[!] Warning: Input file doesn't have .RAF extension: {input_path}")
 
+    file_type = FileType.from_name(args.file_type) if args.file_type else None
+    if file_type is not None and args.thumbnail:
+        print("[!] --file-type is ignored with --thumbnail")
+        file_type = None
+
+    if file_type is FileType.HEIF:
+        suffix = CONTAINER_SUFFIX['heif']
+    elif file_type in (FileType.TIFF_8BIT, FileType.TIFF_16BIT):
+        suffix = CONTAINER_SUFFIX['tiff']
+    else:
+        suffix = CONTAINER_SUFFIX['jpeg']
+
     batch = len(args.input) > 1
-    if batch or args.output.is_dir():
-        outputs = [args.output / (p.stem + '.jpg') for p in args.input]
+    name_outputs = batch or args.output.is_dir()
+    if name_outputs:
+        outputs = [args.output / (p.stem + suffix) for p in args.input]
     else:
         outputs = [args.output]
 
@@ -344,6 +363,10 @@ Requirements:
             changes['SmoothSkinEffect'] = int(skin)
             print(f"Smooth Skin Effect: {args.smooth_skin}")
 
+        if file_type is not None:
+            changes['FileType'] = int(file_type)
+            print(f"File Type: {args.file_type}")
+
         print("=" * 70)
 
         # Validate parameters
@@ -355,6 +378,7 @@ Requirements:
                 shadows=changes.get('ShadowTone'),
                 color=changes.get('Color'),
                 sharpness=changes.get('Sharpness'),
+                file_type=changes.get('FileType'),
             )
         except ValueError as e:
             print(f"[-] Parameter validation failed: {e}")
@@ -399,11 +423,19 @@ Requirements:
                       "power-cycle the camera before retrying")
                 return 1
 
-            # Verify it's actually a JPEG
-            if not jpeg_data.startswith(b'\xFF\xD8\xFF'):
-                print("[!] Warning: Downloaded data doesn't appear to be a JPEG")
+            container = detect_container(jpeg_data)
+            if container is None:
+                print("[!] Warning: downloaded data matches no known format")
+            elif CONTAINER_SUFFIX[container] != suffix:
+                print(f"[!] Camera returned {container.upper()}, not the "
+                      f"requested {args.file_type}: this body does not "
+                      "support that format")
+                if name_outputs:
+                    output_path = output_path.with_suffix(
+                        CONTAINER_SUFFIX[container]
+                    )
 
-            # Save JPEG
+            # Save the converted image
             print(f"[*] Saving to {output_path}...")
             output_path.write_bytes(jpeg_data)
             total_bytes += len(jpeg_data)
