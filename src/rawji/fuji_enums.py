@@ -9,6 +9,7 @@ All constants extracted from:
 """
 
 from enum import IntEnum
+from typing import Optional
 
 
 # ==============================================================================
@@ -137,6 +138,42 @@ class WhiteBalance(IntEnum):
 # ==============================================================================
 # Image Quality & Size
 # ==============================================================================
+
+class FileType(IntEnum):
+    """Conversion output format"""
+    JPEG = 0x7
+    TIFF_8BIT = 0x9
+    TIFF_16BIT = 0xB
+    HEIF = 0x12
+
+    @classmethod
+    def names(cls):
+        """Return list of file type names for argparse choices"""
+        return [name.lower().replace('_', '-') for name in cls.__members__.keys()]
+
+    @classmethod
+    def from_name(cls, name: str):
+        """Convert CLI name to enum value"""
+        enum_name = name.upper().replace('-', '_')
+        return cls[enum_name]
+
+CONTAINER_SUFFIX = {
+    'jpeg': '.jpg',
+    'tiff': '.tif',
+    'heif': '.heif',
+}
+
+
+def detect_container(data: bytes) -> Optional[str]:
+    """Name the container of converted image data."""
+    if data[:3] == b'\xFF\xD8\xFF':
+        return 'jpeg'
+    if data[:4] in (b'II\x2A\x00', b'MM\x00\x2A'):
+        return 'tiff'
+    if data[4:8] == b'ftyp':
+        return 'heif'
+    return None
+
 
 class ImageQuality(IntEnum):
     """JPEG quality"""

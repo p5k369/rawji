@@ -14,6 +14,10 @@ Based on: docs/fudge/lib/fp/src/d185.c and docs/fudge/lib/fp/src/fp.h
 import struct
 from typing import Dict, Optional
 
+from .fuji_enums import FileType
+
+_FILE_TYPE_CODES = {int(member) for member in FileType}
+
 # ==============================================================================
 # Profile Format Constants
 # ==============================================================================
@@ -342,8 +346,16 @@ def validate_params(
     sharpness: Optional[int] = None,
     warm_cool: Optional[int] = None,
     magenta_green: Optional[int] = None,
+    file_type: Optional[int] = None,
 ) -> None:
     """Validate parameter ranges"""
+
+    if file_type is not None and file_type not in _FILE_TYPE_CODES:
+        raise ValueError(
+            f"FileType out of range: 0x{file_type:02X} "
+            "(must be one of 0x07 JPEG, 0x09 TIFF 8-bit, "
+            "0x0B TIFF 16-bit, 0x12 HEIF)"
+        )
 
     if film_sim is not None and (film_sim < 0x1 or film_sim > 0x14):
         raise ValueError(f"FilmSimulation out of range: 0x{film_sim:02X} (must be 0x01-0x14)")

@@ -130,6 +130,7 @@ older bodies, but any value from 2500 to 10000 K on XProcessor5 bodies.
 | `--mono-wc`       | ±9 gen4 / ±18 XProc5 | Mono warm-cool (B&W sims)    |
 | `--mono-mg`       | ±18 XProc5   | Mono magenta-green (B&W sims) |
 | `--thumbnail`     | flag              | Small fast preview (~40 KB)   |
+| `--file-type`     | jpeg/tiff-8bit/tiff-16bit/heif | Output format |
 
 ## Examples
 

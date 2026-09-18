@@ -24,6 +24,13 @@ from .fuji_enums import (
 )
 
 
+# Largest PTP container accepted on a bulk IN transfer, in bytes.
+MAX_CONTAINER_SIZE = 512 * 1024 * 1024
+
+# Size of one bulk IN/OUT read or write, in bytes.
+USB_CHUNK_SIZE = 512 * 1024
+
+
 # ==============================================================================
 # PTP Container Structure (USB variant)
 # ==============================================================================
@@ -105,6 +112,7 @@ class FujiCamera:
         self.session_id = 0x00000001
         self.transaction_id = 0
         self.timeout = 5000  # 5 seconds default
+        self.max_container_size = MAX_CONTAINER_SIZE
 
     def find_camera(self) -> Optional[usb.core.Device]:
         """Find Fujifilm camera on USB"""
@@ -206,7 +214,7 @@ class FujiCamera:
 
         # Chunk large transfers to avoid USB memory issues
         # Based on libpict transport.c ptp_send_packet()
-        max_chunk_size = 512 * 1024  # 512KB chunks
+        max_chunk_size = USB_CHUNK_SIZE
         offset = 0
         total = len(data)
 
@@ -223,7 +231,7 @@ class FujiCamera:
         """Receive PTP container via USB bulk IN, handling multi-packet transfers"""
         try:
             # Read first chunk to get container length
-            first_chunk = self.ep_in.read(512 * 1024, timeout=self.timeout)
+            first_chunk = self.ep_in.read(USB_CHUNK_SIZE, timeout=self.timeout)
             data = bytearray(first_chunk)
 
             # Parse container header to get total length
@@ -232,14 +240,21 @@ class FujiCamera:
 
             total_length = struct.unpack('<I', data[:4])[0]
 
+            if total_length > self.max_container_size:
+                raise IOError(
+                    f"Container too large: {total_length} bytes "
+                    f"(limit {self.max_container_size} bytes)"
+                )
+
             # Read remaining packets if needed
             while len(data) < total_length:
-                chunk = self.ep_in.read(512 * 1024, timeout=self.timeout)
+                chunk = self.ep_in.read(USB_CHUNK_SIZE, timeout=self.timeout)
+                if len(chunk) == 0:
+                    raise IOError(
+                        f"Short container: got {len(data)} of "
+                        f"{total_length} bytes"
+                    )
                 data.extend(chunk)
-
-                # Safety check to avoid infinite loops
-                if len(data) > 100 * 1024 * 1024:  # 100MB limit
-                    raise IOError(f"Container too large: {len(data)} bytes")
 
             return PTPContainer.unpack(bytes(data))
         except Exception as e:
